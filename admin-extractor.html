@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Data Extractor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      background: #0d1117;
+      color: #c9d1d9;
+      line-height: 1.6;
+    }
+
+    .wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+      gap: 1px;
+      background: #161b22;
+    }
+
+    .panel {
+      background: #0d1117;
+      padding: 24px;
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+
+    .panel::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .panel::-webkit-scrollbar-track {
+      background: #161b22;
+    }
+
+    .panel::-webkit-scrollbar-thumb {
+      background: #30363d;
+      border-radius: 4px;
+    }
+
+    .panel::-webkit-scrollbar-thumb:hover {
+      background: #3d444d;
+    }
+
+    .panel-left {
+      border-right: 1px solid #30363d;
+    }
+
+    .panel-right {
+      border-left: 1px solid #30363d;
+    }
+
+    h1, h2, h3 {
+      color: #f0f6fc;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 24px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #30363d;
+    }
+
+    h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #79c0ff;
+      margin-top: 12px;
+      margin-bottom: 8px;
+    }
+
+    .control-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: #8b949e;
+      margin-bottom: 6px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 12px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      font-family: inherit;
+      font-size: 12px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #58a6ff;
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.1);
+      background: #0d1117;
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-size: 11px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      background: #238636;
+      color: white;
+      border: 1px solid #2ea043;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .btn:hover {
+      background: #2ea043;
+      border-color: #3fb950;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: #21262d;
+      border-color: #30363d;
+      color: #c9d1d9;
+    }
+
+    .btn-secondary:hover {
+      background: #30363d;
+      border-color: #444c56;
+    }
+
+    .status {
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #30363d;
+      display: none;
+    }
+
+    .status.active {
+      display: block;
+    }
+
+    .status.success {
+      background: #0d3817;
+      border-color: #238636;
+      color: #3fb950;
+    }
+
+    .status.error {
+      background: #3d1f1a;
+      border-color: #da3633;
+      color: #f85149;
+    }
+
+    .status.info {
+      background: #0c2d6b;
+      border-color: #58a6ff;
+      color: #79c0ff;
+    }
+
+    .data-section {
+      margin-bottom: 20px;
+      padding: 12px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+    }
+
+    .data-field {
+      margin-bottom: 8px;
+      font-size: 11px;
+      padding: 8px;
+      background: #0d1117;
+      border-radius: 4px;
+      border-left: 2px solid #58a6ff;
+      word-break: break-word;
+    }
+
+    .data-field-label {
+      color: #79c0ff;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .data-field-value {
+      color: #c9d1d9;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .data-list {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .data-list li {
+      padding: 6px 8px;
+      margin-bottom: 4px;
+      background: #0d1117;
+      border-left: 2px solid #79c0ff;
+      font-size: 11px;
+      border-radius: 2px;
+      word-break: break-all;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #30363d;
+      color: #79c0ff;
+      border-radius: 12px;
+      font-size: 10px;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+
+    .iframe-container {
+      width: 100%;
+      height: calc(100vh - 200px);
+      border: none;
+      background: white;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    #targetIframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .hidden-input {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+    }
+
+    .count-badge {
+      display: inline-block;
+      background: #58a6ff;
+      color: #0d1117;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    .expand-btn {
+      background: none;
+      border: none;
+      color: #79c0ff;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 0;
+      font-weight: 600;
+    }
+
+    .expand-btn:hover {
+      color: #58a6ff;
+    }
+
+    .collapsible {
+      display: none;
+    }
+
+    .collapsible.expanded {
+      display: block;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 24px;
+      color: #8b949e;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #30363d;
+      border-top-color: #58a6ff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .empty {
+      padding: 24px;
+      text-align: center;
+      color: #8b949e;
+      font-size: 12px;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      color: #58a6ff;
+      cursor: pointer;
+      font-size: 10px;
+      padding: 0;
+      float: right;
+    }
+
+    .copy-btn:hover {
+      color: #79c0ff;
+    }
+
+    @media (max-width: 1200px) {
+      .wrapper {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-right {
+        border-left: none;
+        border-top: 1px solid #30363d;
+      }
+
+      .panel-left {
+        border-right: none;
+      }
+
+      .iframe-container {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <!-- Painel Esquerdo - Admin -->
+    <div class="panel panel-left">
+      <h1>🔧 Extractor Admin</h1>
+
+      <div class="control-group">
+        <label>URL Secreta (escondida)</label>
+        <input type="text" id="secretUrl" placeholder="https://exemplo.com.br" value="">
+        <small style="color: #8b949e; display: block; margin-top: 4px;">Esta URL não será exibida ao público</small>
+      </div>
+
+      <div class="control-group">
+        <label>Nome do Site (para exibição)</label>
+        <input type="text" id="siteDisplayName" placeholder="Nome visível na interface">
+      </div>
+
+      <button class="btn" onclick="extractor.loadSite()">Carregar & Extrair</button>
+
+      <div class="status" id="status"></div>
+
+      <!-- Resultados -->
+      <div id="results" style="display: none;">
+        <h2>📊 Dados Extraídos</h2>
+
+        <!-- Meta e Headers -->
+        <div class="data-section">
+          <button class="expand-btn" onclick="extractor.toggleSection(this)">▼ Metadados</button>
+          <div class="collapsible expanded" style="margin-top: 12px;">
+            <div id="metaData"></div>
+          </div>
+        </div>
+
+        <!-- Contatos -->
+        <div class="data-section">
+          <button class="expand-btn" onclick="extractor.toggleSection(this)">▼ Contatos <span class="count-badge" id="emailCount">0</span></button>
+          <div class="collapsible expanded" style="margin-top: 12px;">
+            <h3>Emails</h3>
+            <ul class="data-list" id="emailsList"></ul>
+            <h3 style="margin-top: 12px;">Telefones</h3>
+            <ul class="data-list" id="phonesList"></ul>
+            <h3 style="margin-top: 12px;">Endereços</h3>
+            <ul class="data-list" id="addressList"></ul>
+          </div>
+        </div>
+
+        <!-- Pessoas -->
+        <div class="data-section">
+          <button class="expand-btn" onclick="extractor.toggleSection(this)">▼ Pessoas <span class="count-badge" id="personCount">0</span></button>
+          <div class="collapsible expanded" style="margin-top: 12px;">
+            <ul class="data-list" id="personsList"></ul>
+          </div>
+        </div>
+
+        <!-- Empresas -->
+        <div class="data-section">
+          <button class="expand-btn" onclick="extractor.toggleSection(this)">▼ Empresas <span class="count-badge" id="companyCount">0</span></button>
+          <div class="collapsible expanded" style="margin-top: 12px;">
+            <ul class="data-list" id="companiesList"></ul>
+          </div>
+        </div>
+
+        <!-- Links -->
+        <div class="data-section">
+          <button class="expand-btn" onclick="extractor.toggleSection(this)">▼ Links <span class="count-badge" id="linkCount">0</span></button>
+          <div class="collapsible expanded" style="margin-top: 12px;">
+            <ul class="data-list" id="linksList"></ul>
+          </div>
+        </div>
+
+        <!-- Imagens -->
+        <div class="data-section">
+          <button class="expand-btn" onclick="extractor.toggleSection(this)">▼ Imagens <span class="count-badge" id="imageCount">0</span></button>
+          <div class="collapsible expanded" style="margin-top: 12px;">
+            <ul class="data-list" id="imagesList"></ul>
+          </div>
+        </div>
+
+        <!-- Tabelas -->
+        <div class="data-section">
+          <button class="expand-btn" onclick="extractor.toggleSection(this)">▼ Tabelas <span class="count-badge" id="tableCount">0</span></button>
+          <div class="collapsible expanded" style="margin-top: 12px;">
+            <div id="tablesList"></div>
+          </div>
+        </div>
+
+        <!-- Estruturado (Schema.org) -->
+        <div class="data-section">
+          <button class="expand-btn" onclick="extractor.toggleSection(this)">▼ Dados Estruturados <span class="count-badge" id="schemaCount">0</span></button>
+          <div class="collapsible expanded" style="margin-top: 12px;">
+            <textarea id="schemaData" readonly style="height: 200px;"></textarea>
+          </div>
+        </div>
+
+        <!-- Textos Principais -->
+        <div class="data-section">
+          <button class="expand-btn" onclick="extractor.toggleSection(this)">▼ Conteúdo Principal</button>
+          <div class="collapsible expanded" style="margin-top: 12px;">
+            <textarea id="mainContent" readonly style="height: 200px;"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Painel Direito - Preview -->
+    <div class="panel panel-right">
+      <div style="margin-bottom: 16px;">
+        <h2>👁️ Preview do Site</h2>
+        <small style="color: #8b949e;">A URL aqui está escondida do usuário final</small>
+      </div>
+      <div class="iframe-container">
+        <iframe id="targetIframe" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const extractor = {
+      doc: null,
+      extractedData: {
+        emails: [],
+        phones: [],
+        addresses: [],
+        persons: [],
+        companies: [],
+        links: [],
+        images: [],
+        tables: [],
+        schemas: [],
+        mainContent: ''
+      },
+
+      showStatus(message, type = 'info') {
+        const status = document.getElementById('status');
+        status.textContent = message;
+        status.className = `status active ${type}`;
+        setTimeout(() => {
+          status.classList.remove('active');
+        }, 5000);
+      },
+
+      async loadSite() {
+        const url = document.getElementById('secretUrl').value;
+        const displayName = document.getElementById('siteDisplayName').value;
+
+        if (!url) {
+          this.showStatus('Cole uma URL válida', 'error');
+          return;
+        }
+
+        this.showStatus('Carregando...', 'info');
+
+        try {
+          const response = await fetch(url);
+          const html = await response.text();
+          
+          // Parse HTML
+          this.doc = new DOMParser().parseFromString(html, 'text/html');
+          
+          // Extrair dados
+          this.extractAllData();
+          
+          // Renderizar no iframe
+          const iframe = document.getElementById('targetIframe');
+          iframe.srcdoc = html;
+          
+          // Mostrar resultados
+          document.getElementById('results').style.display = 'block';
+          
+          this.showStatus(`✓ Extração concluída de "${displayName || url}"`, 'success');
+        } catch (err) {
+          this.showStatus(`Erro: ${err.message}`, 'error');
+        }
+      },
+
+      extractAllData() {
+        this.extractedData = {
+          emails: [],
+          phones: [],
+          addresses: [],
+          persons: [],
+          companies: [],
+          links: [],
+          images: [],
+          tables: [],
+          schemas: [],
+          mainContent: ''
+        };
+
+        this.extractMetadata();
+        this.extractContacts();
+        this.extractPersons();
+        this.extractCompanies();
+        this.extractLinks();
+        this.extractImages();
+        this.extractTables();
+        this.extractSchemaOrg();
+        this.extractMainContent();
+        
+        this.renderResults();
+      },
+
+      extractMetadata() {
+        const meta = {
+          title: this.doc.title || 'N/A',
+          description: this.doc.querySelector('meta[name="description"]')?.content || 'N/A',
+          keywords: this.doc.querySelector('meta[name="keywords"]')?.content || 'N/A',
+          author: this.doc.querySelector('meta[name="author"]')?.content || 'N/A',
+          og_title: this.doc.querySelector('meta[property="og:title"]')?.content || 'N/A',
+          og_description: this.doc.querySelector('meta[property="og:description"]')?.content || 'N/A',
+          og_image: this.doc.querySelector('meta[property="og:image"]')?.content || 'N/A',
+          canonical: this.doc.querySelector('link[rel="canonical"]')?.href || 'N/A'
+        };
+
+        const metaHtml = Object.entries(meta).map(([key, value]) => 
+          `<div class="data-field"><span class="data-field-label">${key}:</span><span class="data-field-value">${value}</span></div>`
+        ).join('');
+
+        document.getElementById('metaData').innerHTML = metaHtml;
+      },
+
+      extractContacts() {
+        const text = this.doc.body.innerText + ' ' + this.doc.head.innerText;
+        
+        // Emails
+        const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi;
+        const emails = new Set([...text.matchAll(emailRegex)].map(m => m[1].toLowerCase()));
+        this.extractedData.emails = Array.from(emails);
+
+        // Telefones (múltiplos formatos)
+        const phoneRegex = /(?:\+?55)?[\s\-]?(\(?[0-9]{2}\)?)?[\s\-]?([9]?)[0-9]{4}[\s\-]?[0-9]{4}/g;
+        const phones = new Set([...text.matchAll(phoneRegex)].map(m => m[0].trim()));
+        this.extractedData.phones = Array.from(phones);
+
+        // Endereços (palavras-chave comuns)
+        const addressRegex = /(?:rua|avenida|av\.|alameda|praça|travessa|rod\.?|estrada|praia|monte|passagem|quadra|lote|condomínio)\s+[^\n]+(?:,[\s\S]*?(?:\d{5}-?\d{3}|CEP))?/gi;
+        const addresses = new Set([...text.matchAll(addressRegex)].map(m => m[0].trim()));
+        this.extractedData.addresses = Array.from(addresses).slice(0, 20);
+
+        this.renderContacts();
+      },
+
+      extractPersons() {
+        // Heurística: palavras capitalizadas consecutivas, CEO, diretor, etc
+        const text = this.doc.body.innerText;
+        const personPatterns = [
+          /(?:CEO|Diretor|Presidente|Gerente|Chefe|Coordenador|Consultor|Especialista|Analista|Engenheiro|Professor|Doutor|Dr\.|Sr\.|Sra\.)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g,
+          /(?:por|de|por responsabilidade de|assinado por)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g
+        ];
+
+        const persons = new Set();
+        personPatterns.forEach(pattern => {
+          const matches = text.matchAll(pattern);
+          [...matches].forEach(m => {
+            if (m[1] && m[1].length > 2) {
+              persons.add(m[1]);
+            }
+          });
+        });
+
+        this.extractedData.persons = Array.from(persons).slice(0, 20);
+        this.renderPersons();
+      },
+
+      extractCompanies() {
+        const text = this.doc.body.innerText;
+        const companyPatterns = [
+          /(?:empresa|ltda|sa|inc|corp|group|fundação|instituto|centro)\s+([A-Z][^\n,;.]*(?:[A-Z][^\n,;.]*)?)/gi,
+          /(?:de|do|da|por)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:\s+(?:ltda|sa|inc|corp))?)/g
+        ];
+
+        const companies = new Set();
+        companyPatterns.forEach(pattern => {
+          const matches = text.matchAll(pattern);
+          [...matches].forEach(m => {
+            if (m[1] && m[1].length > 3 && !m[1].match(/^(de|do|da|e|ou|que)$/i)) {
+              companies.add(m[1].trim());
+            }
+          });
+        });
+
+        this.extractedData.companies = Array.from(companies).slice(0, 20);
+        this.renderCompanies();
+      },
+
+      extractLinks() {
+        const links = new Set();
+        this.doc.querySelectorAll('a[href]').forEach(a => {
+          const href = a.href;
+          if (href && !href.startsWith('javascript:') && !href.startsWith('#')) {
+            links.add(href);
+          }
+        });
+
+        this.extractedData.links = Array.from(links).slice(0, 50);
+        this.renderLinks();
+      },
+
+      extractImages() {
+        const images = new Set();
+        this.doc.querySelectorAll('img[src]').forEach(img => {
+          if (img.src && !img.src.startsWith('data:')) {
+            images.add(img.src);
+          }
+        });
+
+        this.extractedData.images = Array.from(images).slice(0, 30);
+        this.renderImages();
+      },
+
+      extractTables() {
+        const tables = [];
+        this.doc.querySelectorAll('table').forEach((table, idx) => {
+          const data = [];
+          table.querySelectorAll('tr').forEach(row => {
+            const cells = [];
+            row.querySelectorAll('td, th').forEach(cell => {
+              cells.push(cell.innerText.trim());
+            });
+            if (cells.length > 0) {
+              data.push(cells);
+            }
+          });
+          if (data.length > 0) {
+            tables.push({ id: idx, rows: data });
+          }
+        });
+
+        this.extractedData.tables = tables.slice(0, 10);
+        this.renderTables();
+      },
+
+      extractSchemaOrg() {
+        const schemas = [];
+        this.doc.querySelectorAll('script[type="application/ld+json"]').forEach(script => {
+          try {
+            const data = JSON.parse(script.textContent);
+            schemas.push(data);
+          } catch (e) {
+            // Ignorar parse errors
+          }
+        });
+
+        this.extractedData.schemas = schemas;
+        document.getElementById('schemaData').value = JSON.stringify(schemas, null, 2);
+        document.getElementById('schemaCount').textContent = schemas.length;
+      },
+
+      extractMainContent() {
+        // Extrai paragrafos e headings principais
+        const content = [];
+        this.doc.querySelectorAll('h1, h2, h3, p').forEach(el => {
+          const text = el.innerText.trim();
+          if (text.length > 10) {
+            content.push(`[${el.tagName}] ${text}`);
+          }
+        });
+
+        this.extractedData.mainContent = content.slice(0, 50).join('\n\n');
+        document.getElementById('mainContent').value = this.extractedData.mainContent;
+      },
+
+      renderContacts() {
+        document.getElementById('emailsList').innerHTML = this.extractedData.emails
+          .map(e => `<li>${e} <button class="copy-btn" onclick="extractor.copy('${e}')">copy</button></li>`)
+          .join('') || '<li class="empty">Nenhum email encontrado</li>';
+
+        document.getElementById('phonesList').innerHTML = this.extractedData.phones
+          .map(p => `<li>${p} <button class="copy-btn" onclick="extractor.copy('${p}')">copy</button></li>`)
+          .join('') || '<li class="empty">Nenhum telefone encontrado</li>';
+
+        document.getElementById('addressList').innerHTML = this.extractedData.addresses
+          .map(a => `<li>${a} <button class="copy-btn" onclick="extractor.copy('${a}')">copy</button></li>`)
+          .join('') || '<li class="empty">Nenhum endereço encontrado</li>';
+
+        document.getElementById('emailCount').textContent = this.extractedData.emails.length;
+      },
+
+      renderPersons() {
+        document.getElementById('personsList').innerHTML = this.extractedData.persons
+          .map(p => `<li>${p}</li>`)
+          .join('') || '<li class="empty">Nenhuma pessoa encontrada</li>';
+
+        document.getElementById('personCount').textContent = this.extractedData.persons.length;
+      },
+
+      renderCompanies() {
+        document.getElementById('companiesList').innerHTML = this.extractedData.companies
+          .map(c => `<li>${c}</li>`)
+          .join('') || '<li class="empty">Nenhuma empresa encontrada</li>';
+
+        document.getElementById('companyCount').textContent = this.extractedData.companies.length;
+      },
+
+      renderLinks() {
+        document.getElementById('linksList').innerHTML = this.extractedData.links
+          .map(l => `<li><a href="${l}" target="_blank" style="color: #58a6ff; text-decoration: none;">${l}</a></li>`)
+          .join('') || '<li class="empty">Nenhum link encontrado</li>';
+
+        document.getElementById('linkCount').textContent = this.extractedData.links.length;
+      },
+
+      renderImages() {
+        document.getElementById('imagesList').innerHTML = this.extractedData.images
+          .map(img => `<li><a href="${img}" target="_blank" style="color: #58a6ff; text-decoration: none;">${img}</a></li>`)
+          .join('') || '<li class="empty">Nenhuma imagem encontrada</li>';
+
+        document.getElementById('imageCount').textContent = this.extractedData.images.length;
+      },
+
+      renderTables() {
+        const html = this.extractedData.tables
+          .map((table, idx) => {
+            const rows = table.rows.map(row => 
+              `<tr>${row.map(cell => `<td style="padding: 4px; border: 1px solid #30363d;">${cell}</td>`).join('')}</tr>`
+            ).join('');
+            return `<div style="margin-bottom: 12px; overflow-x: auto;">
+              <strong>Tabela ${idx + 1}</strong>
+              <table style="width: 100%; border-collapse: collapse; font-size: 10px; background: #0d1117;">
+                ${rows}
+              </table>
+            </div>`;
+          })
+          .join('');
+
+        document.getElementById('tablesList').innerHTML = html || '<div class="empty">Nenhuma tabela encontrada</div>';
+        document.getElementById('tableCount').textContent = this.extractedData.tables.length;
+      },
+
+      renderResults() {
+        // Já feito acima nas funções individuais
+      },
+
+      toggleSection(btn) {
+        const collapsible = btn.nextElementSibling;
+        collapsible.classList.toggle('expanded');
+        btn.textContent = btn.textContent.replace('▼', '▶').replace('▶', '▼');
+      },
+
+      copy(text) {
+        navigator.clipboard.writeText(text);
+        alert('Copiado: ' + text);
+      }
+    };
+
+    // Allow load on Enter
+    document.getElementById('secretUrl').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        extractor.loadSite();
+      }
+    });
+  </script>
+</body>
+</html>
